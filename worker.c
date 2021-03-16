@@ -5,7 +5,7 @@
 double shortest;
 int *path;
 int chunksize;
-int start;
+unsigned long long start;
 unsigned long long count;
 unsigned long long size;
 
@@ -68,7 +68,7 @@ length(double **mat, int *a)
 	double l;
 	int i, begin;
 
-	l = 0;
+	l = 0.0;
 
 	begin = a[0];
 
@@ -87,15 +87,45 @@ permute(double **mat, int *a, int l, int r)
 {
 	int i;
 
+	if (count > chunksize)
+		return;
+
 	if (l == r) {
 		count++;
-		if (count > start && count <= (start + chunksize))
-			length(mat, a);
+		length(mat, a);
 	} else for (i = l; i <= r; i++) {
 		swap(&a[l], &a[i]);
 		permute(mat, a, l + 1, r);
 		swap(&a[l], &a[i]);
 	}
+}
+
+void
+ith(int *a, int n, unsigned long long i)
+{
+	int j, k = 0;
+	unsigned long long *fact = malloc(n * sizeof(unsigned long long));
+	unsigned long long *perm = malloc(n * sizeof(unsigned long long));
+
+	fact[k] = 1;
+	while (++k < n)
+		fact[k] = fact[k - 1] * k;
+
+	for (k = 0; k < n; k++) {
+		perm[k] = i / fact[n - 1 - k];
+		i = i % fact[n - 1 - k];
+	}
+
+	for (k = n - 1; k > 0; k--)
+		for (j = k - 1; j >= 0; j--)
+			if (perm[j] <= perm[k])
+				perm[k]++;
+
+	for (k = 0; k < n; k++)
+		a[k] = perm[k];
+
+	free(perm);
+	free(fact);
 }
 
 void
@@ -115,7 +145,7 @@ main(int argc, char **argv)
 
 	chunksize = atoi(argv[3]);
 
-	start = atoi(argv[4]);
+	start = atoll(argv[4]);
 
 	shortest = 1000000000.0;
 
@@ -123,17 +153,15 @@ main(int argc, char **argv)
 
 	path = malloc(sizeof(int) * size);
 
-	for (i = 0; i < size; i++)
-		a[i] = i;
-
 	mat = loadfile(size, argv[2]);
+
+	ith(a, size, start);
 
 	permute(mat, a, 0, size - 1);
 
 	snprint(buf, 0x400, "%f ", shortest);
 
 	for (i = 0; i < size; i++)
-		snprint(&buf[strlen(buf)], 0x400 - strlen(buf), "%d ", path[i]);
-
+		snprint(&buf[strlen(buf)], 0x400 - strlen(buf) - 1, "%d ", path[i]);
 	print("%s", buf);
 }

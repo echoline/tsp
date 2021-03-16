@@ -19,8 +19,8 @@ void
 main(int argc, char **argv)
 {
 	int ncpu;
-	int npaths;
-	int parts;
+	unsigned long long npaths;
+	unsigned long long parts;
 	int i, r, d;
 	char start[64];
 	char chunksize[64];
@@ -48,8 +48,8 @@ main(int argc, char **argv)
 		if (r == -1)
 			sysfatal("fork: %r");
 		if (r == 0) {
-			snprint(chunksize, 63, "%d", parts);
-			snprint(start, 63, "%d", parts * i);
+			snprint(chunksize, 63, "%llud", parts);
+			snprint(start, 63, "%llud", parts * i);
 			execl("/bin/rcpu", "rcpu", "-h", argv[i+3], "-c", "worker", argv[1], argv[2], chunksize, start, nil);
 		}
 	}
